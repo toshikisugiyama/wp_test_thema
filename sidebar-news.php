@@ -8,6 +8,7 @@
               'order' => 'DESC',
               'orderby' => 'date',
               'posts_per_page' => 6,
+              // 'meta_key' => 'サムネイルスワイパー掲載最終日',
             ];
     $swiper_query = new WP_Query($swiper_args);
 ?>
@@ -15,16 +16,28 @@
   <div class="row swiper-container">
     <ul class="swiper-wrapper mx-0 px-0">
 <?php
+    if ($swiper_query->have_posts()) {
+        $count=0;
+        while($swiper_query->have_posts()){
+            $swiper_query->the_post();
+            if (has_post_thumbnail()) {
+                $now = date("Y-m-d");
+                $deadline = get_post_meta($post->ID,'サムネイルスワイパー掲載最終日')[0];
+                if ($now <= $deadline) {
+                    $count++;
+                }
+            }
+        }
+    }
     if ($swiper_query->have_posts()):
         while($swiper_query->have_posts()):
             $swiper_query->the_post();
             if (has_post_thumbnail()):
-                // $now = strtotime("now");
                 $now = date("Y-m-d");
-                // $deadline = strtotime(get_post_meta($post->ID));
                 $deadline = get_post_meta($post->ID,'サムネイルスワイパー掲載最終日')[0];
-                // var_dump(get_the_content());
                 if($now <= $deadline):
+                    if ($count===1):
+                        for ($i=0; $i < 5; $i++):
 ?>
                   <li class="position-relative swiper-slide thumbnail_list">
                     <?php the_post_thumbnail(); ?>
@@ -34,6 +47,18 @@
                     </a>
                   </li>
 <?php
+                        endfor;
+                    else:
+?>
+                  <li class="position-relative swiper-slide thumbnail_list">
+                    <?php the_post_thumbnail(); ?>
+                    <a class="hover_modal position-absolute py-5 nounderline overflow-auto" href="<?= get_permalink(); ?>">
+                      <h3 class="h5 mb-5 px-5 py-2"><?php the_title();?></h3>
+                      <span class="h6 small px-5 d-block"><?php echo strip_tags(get_the_content()); ?></span>
+                    </a>
+                  </li>
+<?php
+                    endif;
                 endif;
             endif;
         endwhile;
